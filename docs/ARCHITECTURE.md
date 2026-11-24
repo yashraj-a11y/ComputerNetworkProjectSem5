@@ -42,7 +42,7 @@ flowchart LR
 
 ## 2. Machine roles and IP / service table
 
-Fill in from `evidence/inventory/*.txt` (screenshots 01–06):
+From `evidence/evidence-*/inventory/*.txt` (screenshots 01–06):
 
 | Machine | Hostname | Interface | IPv4 | Mask / prefix | Gateway | MAC address |
 |---|---|---|---|---|---|---|

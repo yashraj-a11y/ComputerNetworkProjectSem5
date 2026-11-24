@@ -298,10 +298,7 @@ sudo pfctl -X TOKEN
 Real example from our setup: Mac 1's managed firewall blocked nginx. `nc` succeeded (TCP OK), but TLS failed with `SSL_ERROR_SYSCALL`. That's a host firewall acting above TCP, and a good viva story.
 
 ## Step 7: evidence and git (whoever pushes)
-```bash
-mkdir -p evidence/phase2
-```
-Write `docs/PHASE2.md` and link it from the README, then:
+Everyone AirDrops their `p2-*.png` screenshots to the person who pushes; they go in `evidence/Phase-2-screenshot/`. Write `docs/PHASE2.md` and link it from the README, then:
 ```bash
 git add evidence/Phase-2-screenshot docs/PHASE2.md docs/PHASE2-RUNBOOK.md README.md team.env .gitignore
 ```

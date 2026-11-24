@@ -103,9 +103,9 @@ Then `sudo pfctl -E`, which returns a token, followed by `sudo pfctl -a com.appl
 | No answer (edge dead, old DNS answer still cached) | 11:33:27 – 11:33:47 |
 | First `x-edge: standby-nginx` | 11:33:51 |
 
-The downtime was **27 s**, which is under the 30 s TTL. Both DNS servers answered 10.7.4.107 by 11:33:54.
+The downtime was **27 s**. Both DNS servers answered 10.7.4.107 by 11:33:54, and Mac 3 reached the standby at 11:33:51, within seconds of the record change.
 
-**Explanation:** the downtime is capped by the TTL (30 s). It's usually shorter, because the cached answer is already partway through its TTL. A real setup would automate the switch with keepalived/VRRP (a shared virtual IP) or health-checked DNS.
+**Explanation:** most of the 27 s was the time it took us to do the cutover by hand: stop nginx on Mac 2, then change the record on two DNS servers. Once the record changed, the client switched almost at once. The TTL (30 s) is the most a client can keep the old answer after the change, so with a manual cutover the worst case is the time to react plus one TTL. A real setup would automate the switch with keepalived/VRRP (a shared virtual IP) or health-checked DNS, which removes the human delay.
 
 ## F: live fault diagnosis (viva)
 

@@ -1,4 +1,4 @@
-# Private Network Service Platform: CN Project, Phase 1
+# Private Network Service Platform: CN Project, Phase 1 and Phase 2
 
 A client types `https://app.teamx.test`. **Our own DNS server** resolves the name, the connection goes over **HTTPS to our own nginx edge**, and the edge **load-balances** the request across **two backend servers**. Every step is captured with dig, curl, Wireshark and the browser, on three real MacBooks on one Wi-Fi.
 
