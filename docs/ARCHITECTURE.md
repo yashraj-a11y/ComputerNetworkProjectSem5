@@ -7,9 +7,9 @@
 | PDF role | Runs on | Address |
 |---|---|---|
 | Mac 1: DNS server + test client | Mac 1 (Yash Raj) | 10.7.26.168:53 |
-| Mac 2: Edge (nginx, TLS, load balancer) | Mac 2 (Yash Yadav) | 10.7.25.181:80/443 |
-| Mac 3: Backend A | Mac 2 (Yash Yadav) | 10.7.25.181:3001 |
-| Mac 4: Backend B + test client | Mac 3 (Aditya Samadhiya) | 10.7.23.23:3002 |
+| Mac 2: Edge (nginx, TLS, load balancer) | Mac 2 (Aditya Samadhiya) | 10.7.25.181:80/443 |
+| Mac 3: Backend A | Mac 2 (Aditya Samadhiya) | 10.7.25.181:3001 |
+| Mac 4: Backend B + test client | Mac 3 (Yash Yadav) | 10.7.23.23:3002 |
 
 All three Macs are on the same Wi-Fi subnet 255.255.224.0 with the same default gateway 10.7.0.1. No routing between subnets, no NAT between our machines, no cloud. Backend B sits on a different Mac from the edge, so load balancing really crosses the network.
 

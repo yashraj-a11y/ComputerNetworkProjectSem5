@@ -13,8 +13,8 @@ A client types `https://app.teamx.test`. **Our own DNS server** resolves the nam
 | Enrollment no. | Name | Mac | Roles |
 |---|---|---|---|
 | 2401010514 | Yash Raj | Mac 1, 10.7.26.168 | DNS server (dnsmasq), test client |
-| 2401010515 | Yash Yadav | Mac 2, 10.7.25.181 | Edge (nginx reverse proxy, TLS, load balancer), Backend A |
-| 2401010037 | Aditya Samadhiya | Mac 3, 10.7.23.23 | Backend B, test client, Wireshark capture |
+| 2401010037 | Aditya Samadhiya | Mac 2, 10.7.25.181 | Edge (nginx reverse proxy, TLS, load balancer), Backend A |
+| 2401010515 | Yash Yadav | Mac 3, 10.7.23.23 | Backend B, test client, Wireshark capture |
 
 The roles above are Phase 1. Phase 2 roles and IPs are in [Phase 2](#phase-2-resilience-extensions) below.
 
