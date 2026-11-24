@@ -16,3 +16,6 @@ tls/out/bundle.pem
 # screen recordings are too big for git - they go to Google Drive
 *.mov
 *.mp4
+
+# Phase 2: backup-DNS copy of team.env (Member 2 only)
+team-backup.env

@@ -34,6 +34,8 @@ A client types `https://app.teamx.test`. **Our own DNS server** resolves the nam
 
 Diagrams, the IP table and the layer-by-layer flow: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
 
+**Phase 2 (resilience extensions A–F):** report [docs/PHASE2.md](docs/PHASE2.md), step-by-step runbook [docs/PHASE2-RUNBOOK.md](docs/PHASE2-RUNBOOK.md), screenshots in `evidence/Phase-2-screenshot/`.
+
 ## Repository layout
 
 ```
