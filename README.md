@@ -18,25 +18,89 @@ A client types `https://app.teamx.test`. **Our own DNS server** resolves the nam
 
 The roles above are Phase 1. Phase 2 roles and IPs are in [Phase 2](#phase-2-resilience-extensions) below.
 
-## Topology (Phase 1)
+## Architecture
 
+### Phase 1: one DNS, one edge, two backends
+
+```mermaid
+flowchart LR
+  subgraph WIFI["College Wi-Fi 10.7.0.0/19, gateway 10.7.0.1"]
+    direction LR
+    subgraph M3["Mac 3 · Yash Yadav · 10.7.23.23"]
+      CLIENT["Client<br/>browser, curl, dig, Wireshark<br/>trusts teamX Local Root CA"]
+      B["Backend B :3002<br/>green page, X-Backend: B"]
+    end
+    subgraph M1["Mac 1 · Yash Raj · 10.7.26.168"]
+      DNS["dnsmasq :53<br/>app/api.teamx.test → edge<br/>TTL 60, authoritative"]
+    end
+    subgraph M2["Mac 2 · Aditya Samadhiya · 10.7.25.181"]
+      EDGE["nginx :80 / :443<br/>TLS termination<br/>round-robin load balancer"]
+      A["Backend A :3001<br/>blue page, X-Backend: A"]
+    end
+  end
+  CLIENT -- "1 · DNS query, UDP 53" --> DNS
+  DNS -. "answer: 10.7.25.181" .-> CLIENT
+  CLIENT == "2 · HTTPS, TCP 443" ==> EDGE
+  EDGE -- "3 · HTTP :3001" --> A
+  EDGE -- "3 · HTTP :3002" --> B
 ```
-                 Same Wi-Fi  (255.255.224.0, gateway 10.7.0.1)
-  Mac 1 10.7.26.168            Mac 2 10.7.25.181                 Mac 3 10.7.23.23
-  ┌───────────────┐            ┌───────────────────────────┐     ┌──────────────────┐
-  │ dnsmasq :53   │◀── DNS ────│                           │     │ client: browser, │
-  │ client        │            │ nginx :80/:443  (edge)    │◀────│ curl, Wireshark  │
-  └───────────────┘◀───────────┼───────── DNS ─────────────┼─────│                  │
-                               │  ├─ HTTP ▶ Backend A :3001│     │                  │
-                               │  └─ HTTP ─────────────────┼────▶│ Backend B :3002  │
-                               └───────────────────────────┘     └──────────────────┘
+
+A request goes 1 → 2 → 3. The client asks our DNS for the name, opens HTTPS to nginx, and nginx forwards plain HTTP to Backend A or B in turn. Clients only ever talk to nginx; the backends stay hidden behind it.
+
+### Phase 2: no single point of failure
+
+```mermaid
+flowchart LR
+  subgraph M3["Mac 3 · Yash Yadav · 10.7.4.107"]
+    CLIENT["Client<br/>DNS list: 10.7.26.168, then 10.7.29.157"]
+    B["Backend B :3002"]
+    SB["Standby nginx :443<br/>X-Edge: standby-nginx<br/>(Ext E)"]
+    PFB["pf: :3002 only from edge<br/>(Ext C)"]
+  end
+  subgraph M1["Mac 1 · Yash Raj · 10.7.26.168"]
+    DNS1["Primary dnsmasq :53<br/>TTL 30 (Ext B)"]
+  end
+  subgraph M2["Mac 2 · Aditya Samadhiya · 10.7.29.157"]
+    EDGE["Primary nginx :443<br/>X-Edge: mac2-nginx<br/>retries the other backend (Ext D)"]
+    A["Backend A :3001"]
+    DNS2["Backup dnsmasq :53<br/>(Ext A)"]
+    PFA["pf: :3001 only from edge<br/>(Ext C)"]
+  end
+  CLIENT -- "DNS, first choice" --> DNS1
+  CLIENT -. "DNS, if Mac 1 is down" .-> DNS2
+  CLIENT == "HTTPS 443" ==> EDGE
+  CLIENT -. "HTTPS 443 after cutover" .-> SB
+  EDGE --> A
+  EDGE --> B
+  SB --> A
+  SB --> B
+  PFA --- A
+  PFB --- B
 ```
 
-1. **DNS:** a client asks Mac 1 (`10.7.26.168:53/UDP`) for `app.teamx.test` → answer: Mac 2's IP, TTL 60.
-2. **HTTPS:** the client connects to Mac 2 `:443`; the certificate is signed by our own CA.
-3. **Load balancing:** nginx decrypts and forwards plain HTTP in round robin to Backend A (Mac 2 `:3001`) or Backend B (Mac 3 `:3002`).
+Solid lines are normal traffic; dotted lines are the failover paths. If Mac 1's DNS dies, the client asks the backup on Mac 2. If a backend dies, nginx retries the other one in the same request. If the primary nginx dies, both DNS servers are switched to point `app.teamx.test` at the standby on Mac 3.
 
-Diagrams, the IP table and the layer-by-layer flow: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
+### One request, step by step
+
+```mermaid
+sequenceDiagram
+  autonumber
+  participant C as Client (Mac 3)
+  participant D as DNS (Mac 1 :53)
+  participant E as nginx edge (Mac 2 :443)
+  participant BE as Backend A or B
+  C->>D: A? app.teamx.test (UDP 53)
+  D-->>C: A = edge IP, TTL 30, aa flag
+  C->>E: TCP SYN, SYN-ACK, ACK
+  C->>E: TLS ClientHello (SNI app.teamx.test, ALPN h2)
+  E-->>C: ServerHello + certificate signed by teamX Local Root CA
+  C->>E: encrypted GET /
+  E->>BE: plain HTTP GET / (round robin, X-Forwarded-For)
+  BE-->>E: 200 OK, X-Backend: A or B
+  E-->>C: encrypted 200 OK, X-Edge header
+```
+
+More diagrams, the full IP and service tables, and the layer-by-layer flow: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
 
 ## Phase 2: resilience extensions
 
